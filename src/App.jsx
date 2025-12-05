@@ -16,6 +16,10 @@ function App() {
   const fileInputRef = useRef(null);
   const [isReplacing, setIsReplacing] = useState(false);
 
+  const [activeSide, setActiveSide] = useState("front");
+  const [frontCanvasData, setFrontCanvasData] = useState(null);
+  const [backCanvasData, setBackCanvasData] = useState(null);
+
   const triggerUpload = () => {
     fileInputRef.current.click();
   };
@@ -216,6 +220,30 @@ function App() {
     localStorage.setItem("recentUploads", JSON.stringify(updatedUploads));
   };
 
+  const handleSideChange = (side) => {
+    if (!fabricCanvas || side === activeSide) return;
+
+    // Save current canvas state
+    if (activeSide === "front") {
+      setFrontCanvasData(fabricCanvas.toJSON());
+    } else {
+      setBackCanvasData(fabricCanvas.toJSON());
+    }
+
+    // Load new canvas state
+    const dataToLoad = side === "front" ? frontCanvasData : backCanvasData;
+    if (dataToLoad) {
+      fabricCanvas.loadFromJSON(dataToLoad, () => {
+        fabricCanvas.renderAll();
+      });
+    } else {
+      fabricCanvas.clear();
+      fabricCanvas.renderAll();
+    }
+
+    setActiveSide(side);
+  };
+
   const deleteSelectedObject = () => {
     if (fabricCanvas) {
       const activeObject = fabricCanvas.getActiveObject();
@@ -321,6 +349,8 @@ function App() {
             onPropertyChange={handlePropertyChange}
             openAdjustPanel={openAdjustPanel}
             onReplace={triggerReplace}
+            onSideChange={handleSideChange}
+            activeSide={activeSide}
           />
           <RightSidebar
             fabricCanvas={fabricCanvas}

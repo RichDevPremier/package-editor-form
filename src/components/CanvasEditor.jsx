@@ -1,33 +1,94 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as fabric from "fabric";
 
 const CanvasEditor = ({ setFabricCanvas }) => {
   const canvasEl = useRef(null);
 
   useEffect(() => {
+    // Dimensions based on the model's printable area aspect ratio (109.507 / 45.282)
+    const canvasWidth = 600;
+    const canvasHeight = 248;
+
     const canvas = new fabric.Canvas(canvasEl.current, {
-      width: 500,
-      height: 400,
-      backgroundColor: "#f0f0f0",
+      width: canvasWidth,
+      height: canvasHeight,
+      backgroundColor: "transparent",
     });
+
+    // Safety Line (inner dashed green)
+    const safetyPadding = 10;
+    const safetyLine = new fabric.Rect({
+      left: safetyPadding,
+      top: safetyPadding,
+      width: canvasWidth - safetyPadding * 2,
+      height: canvasHeight - safetyPadding * 2,
+      fill: "transparent",
+      stroke: "#059669", // Green
+      strokeWidth: 1,
+      strokeDashArray: [5, 3],
+      selectable: false,
+      evented: false,
+    });
+
+    // Bleed Line (outer solid blue)
+    const bleedLine = new fabric.Rect({
+      left: 1,
+      top: 1,
+      width: canvasWidth - 2,
+      height: canvasHeight - 2,
+      fill: "transparent",
+      stroke: "#2563eb", // Blue
+      strokeWidth: 2,
+      selectable: false,
+      evented: false,
+    });
+
+    canvas.add(safetyLine, bleedLine);
+
     setFabricCanvas(canvas);
 
-    // Add a sample image to the canvas
-    const addSampleImage = async () => {
-      try {
-        const img = await fabric.Image.fromURL(
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuBKNkWgS7-L56_G-3rS36cs0WtwVokqZZB253izH8q6fdAp8MrhGdpqBe4WQcPJE0_4foWTiRKHDBZgUPzIZ9UTaB0yEwz-BszJcdaMstJyw7k8OTr0kxGBkZAYXgt3c6ePo7MFTcfuThWg-o_h0KqY_BaJ8M-wOKAozg82ECaD967QEkZJKmYz8tsT9c3gc1OSvTyaZUBPJ1sUjVgGrQ8l22iCEtj-J4Qvmedi9uiN_4AwTNO4LrmMOxv6hVoTz2A8W11OVfqsQys",
-          { crossOrigin: "anonymous" }
-        );
-        img.scaleToWidth(200);
-        canvas.add(img);
-        canvas.centerObject(img);
-        canvas.renderAll();
-      } catch (error) {
-        console.error("Error loading sample image:", error);
+    canvas.on("object:moving", (e) => {
+      const obj = e.target;
+      const safetyPadding = 10;
+      const canvasWidth = 600;
+      const canvasHeight = 248;
+
+      // If the object is larger than the safety area, don't constrain it
+      if (
+        obj.getScaledHeight() > canvasHeight - safetyPadding * 2 ||
+        obj.getScaledWidth() > canvasWidth - safetyPadding * 2
+      ) {
+        return;
       }
-    };
-    addSampleImage();
+
+      obj.setCoords();
+
+      const objBoundingRect = obj.getBoundingRect();
+
+      const safetyZone = {
+        left: safetyPadding,
+        top: safetyPadding,
+        right: canvasWidth - safetyPadding,
+        bottom: canvasHeight - safetyPadding,
+      };
+
+      // Keep object within safety zone
+      if (objBoundingRect.left < safetyZone.left) {
+        obj.left = safetyZone.left;
+      }
+
+      if (objBoundingRect.top < safetyZone.top) {
+        obj.top = safetyZone.top;
+      }
+
+      if (objBoundingRect.left + objBoundingRect.width > safetyZone.right) {
+        obj.left = safetyZone.right - objBoundingRect.width;
+      }
+
+      if (objBoundingRect.top + objBoundingRect.height > safetyZone.bottom) {
+        obj.top = safetyZone.bottom - objBoundingRect.height;
+      }
+    });
 
     return () => {
       setFabricCanvas(null);

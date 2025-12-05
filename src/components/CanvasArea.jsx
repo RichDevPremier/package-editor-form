@@ -8,6 +8,8 @@ const CanvasArea = ({
   onPropertyChange,
   openAdjustPanel,
   onReplace,
+  activeSide,
+  onSideChange,
 }) => {
   return (
     <div className="flex-1 bg-gray-100 p-4 md:p-8 flex flex-col items-center justify-center relative overflow-hidden order-2 lg:order-1">
@@ -18,28 +20,64 @@ const CanvasArea = ({
         openAdjustPanel={openAdjustPanel}
       />
 
-      {/* Safety/Bleed Labels */}
-      <div className="absolute top-12 md:top-16 right-4 md:right-[26%] hidden sm:flex gap-2 z-10">
-        <div className="text-xs bg-green-100 text-green-800 font-medium px-2 py-0.5 rounded-full">
-          Safety Area
-        </div>
-        <div className="text-xs bg-gray-200 text-gray-700 font-medium px-2 py-0.5 rounded-full">
-          Bleed
+      {/* Top Controls with Tooltip */}
+      <div className="absolute top-4 right-4 flex flex-col items-end z-20">
+        <div className="flex items-center p-1 bg-white rounded-lg shadow-sm">
+          <div className="text-xs bg-green-100 text-green-800 font-medium px-3 py-1 rounded-md">
+            Safety Area
+          </div>
+          <div className="text-xs bg-blue-100 text-blue-800 font-medium px-3 py-1 rounded-md ml-2">
+            Bleed
+          </div>
         </div>
       </div>
 
-      {/* Canvas */}
-      <div className="relative w-full max-w-sm md:max-w-lg h-auto flex items-center justify-center">
+      {/* Canvas with Dimensions */}
+      <div className="relative w-full max-w-[450px] md:max-w-[600px] flex items-center justify-center">
+        {/* Vertical Dimension */}
+        <div className="absolute top-1/2 -left-10 transform -translate-y-1/2 flex items-center gap-1 text-gray-500 text-xs">
+          <div className="flex flex-col items-center">
+            <div className="w-2 h-px bg-gray-400"></div>
+            <div className="w-px h-40 bg-gray-400"></div>
+            <div className="w-2 h-px bg-gray-400"></div>
+          </div>
+          <span>1.78in</span>
+        </div>
+
         <CanvasEditor setFabricCanvas={setFabricCanvas} />
+
+        {/* Horizontal Dimension */}
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-1 text-gray-500 text-xs">
+          <span>4.31in</span>
+          <div className="flex items-center">
+            <div className="h-2 w-px bg-gray-400"></div>
+            <div className="h-px w-80 md:w-96 bg-gray-400"></div>
+            <div className="h-2 w-px bg-gray-400"></div>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Controls */}
       <div className="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white rounded-lg shadow-md flex items-center p-1 gap-1 md:gap-2">
         <div className="flex items-center bg-gray-100 rounded-md p-0.5">
-          <button className="px-2 md:px-4 py-1 md:py-1.5 text-xs md:text-sm font-medium text-gray-800 bg-white rounded-md shadow-sm">
+          <button
+            onClick={() => onSideChange("front")}
+            className={`px-2 md:px-4 py-1 md:py-1.5 text-xs md:text-sm font-medium rounded-md ${
+              activeSide === "front"
+                ? "text-gray-800 bg-white shadow-sm"
+                : "text-gray-500"
+            }`}
+          >
             Front
           </button>
-          <button className="px-2 md:px-4 py-1 md:py-1.5 text-xs md:text-sm font-medium text-gray-500">
+          <button
+            onClick={() => onSideChange("back")}
+            className={`px-2 md:px-4 py-1 md:py-1.5 text-xs md:text-sm font-medium rounded-md ${
+              activeSide === "back"
+                ? "text-gray-800 bg-white shadow-sm"
+                : "text-gray-500"
+            }`}
+          >
             Back
           </button>
         </div>
